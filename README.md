@@ -19,7 +19,9 @@ This does carry a penalty because the agent has to document itself as it works. 
 
 This works much better with models that are better at instruction following.  Models with poor instruction skills tend to try to write straight away, and get blocked nearly every turn.  They try to write->blocked, update memory.md , and finally write->ok.  It wastes a lot of time.  _nemotron 3.5 for example, tried to write before updating memory.md 59% of the time. Qwen3.8:27b figured out the mechanic, and wrote itself a note on how to deal with it._
 
-A model with stronger instruction following realizes the nature of the loop it's in, and starts to act and plan accordingly. 
+It also helps greatly to have a model that understands it will be operating in a loop.  This alone is a reasoning challenge that models are not naturally prepared for.  Most models _want_ to solve problems in one-shot, but loop behavior can be established if you ask the model to do it.  
+
+A model with stronger instruction following and reasoning realizes the nature of the loop it's in, and starts to act and plan accordingly. 
 
 ## The loop
 
