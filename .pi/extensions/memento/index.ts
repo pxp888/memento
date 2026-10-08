@@ -57,6 +57,12 @@ let lastHandoffMemoryHash: string | null = null;
 // Gate baseline: memory.md hash at the most recent handoff (or arming). A
 // crossing call is blocked while the on-disk hash still equals this.
 let baselineMemoryHash: string | null = null;
+// Weak-model ergonomics (no loop-semantics change): consecutive gate blocks, and
+// whether the latest memory.md update was predicted to leave its bytes unchanged.
+// Both surface in the block reason so a confused model gets actionable feedback
+// instead of an opaque "unchanged" error it keeps retrying against.
+let consecutiveGateBlocks = 0;
+let lastMemUpdateNoOp = false;
 
 function readText(p: string): string | undefined {
 	try {
@@ -76,7 +82,34 @@ function insideThinking(p: unknown): boolean {
 /** Current sha256 of memory.md on disk, or null when the file is missing. */
 function memoryHash(): string | null {
 	const raw = readText(MEMORY_FILE);
-	return raw === undefined ? null : createHash("sha256").update(raw).digest("hex");
+	return raw === undefined ? null : hashText(raw);
+}
+
+function hashText(s: string): string {
+	return createHash("sha256").update(s).digest("hex");
+}
+
+/**
+ * Predicted sha256 of memory.md after this write/edit call executes, or null when
+ * not derivable. Exact for whole-file writes; first-occurrence approximation for
+ * edits (close enough to pi's exact-match semantics for no-op detection — worst
+ * case a no-op edit goes unlabeled once). Used only to enrich the gate's block
+ * reason; never affects whether anything is blocked.
+ */
+function predictedMemoryHash(toolName: string, input: Record<string, unknown>): string | null {
+	if (toolName === "write") return typeof input.content === "string" ? hashText(input.content) : null;
+	if (toolName === "edit") {
+		const raw = readText(MEMORY_FILE);
+		if (raw === undefined) return null;
+		let out = raw;
+		for (const e of Array.isArray(input.edits)
+			? (input.edits as Array<{ oldText?: unknown; newText?: unknown }>)
+			: []) {
+			if (typeof e.oldText === "string" && typeof e.newText === "string") out = out.replace(e.oldText, e.newText);
+		}
+		return hashText(out);
+	}
+	return null;
 }
 
 /** Engage the loop for this session. Returns an error message, or undefined on success. */
@@ -92,6 +125,8 @@ function arm(): string | undefined {
 	baselineMemoryHash = memoryHash(); // first external call of an engagement must distill into the current state
 	crossedSinceLastHandoff = false;
 	lastHandoffMemoryHash = null; // reset staleness detector for this engagement
+	consecutiveGateBlocks = 0;
+	lastMemUpdateNoOp = false;
 	armed = true;
 	return undefined;
 }
@@ -242,6 +277,17 @@ export default function (pi: ExtensionAPI) {
 			}
 		}
 
+		// No-op detection: if this write/edit targets memory.md and will leave its
+		// bytes unchanged, the next gate block tells the model its "update" did not
+		// count (weak models routinely re-emit identical content and retry in a loop).
+		if ((event.toolName === "write" || event.toolName === "edit") && typeof input.path === "string") {
+			const target = path.resolve(ROOT, input.path);
+			if (target === MEMORY_FILE) {
+				const predicted = predictedMemoryHash(event.toolName, input);
+				lastMemUpdateNoOp = predicted !== null && predicted === memoryHash();
+			}
+		}
+
 		// Default to crossing; exempt only what is provably thinking-local.
 		if (insideThinking(input.path)) return undefined;
 
@@ -251,11 +297,18 @@ export default function (pi: ExtensionAPI) {
 		// call does not set the crossing flag (no handoff follows it).
 		const h = memoryHash();
 		if (h === baselineMemoryHash) {
-			return {
-				block: true,
-				reason: `${MEMORY_FILE} is unchanged since the last handoff — update it first, then retry this call.`,
-			};
+			consecutiveGateBlocks++;
+			let reason = `${MEMORY_FILE} is unchanged since the last handoff — update it first, then retry this call.`;
+			if (lastMemUpdateNoOp) {
+				reason += ` Your latest write/edit to it left its bytes unchanged — add new content for the change to count.`;
+				lastMemUpdateNoOp = false;
+			} else if (consecutiveGateBlocks >= 2) {
+				reason += ` (gate block #${consecutiveGateBlocks} in a row — retrying this call will not help until memory.md's bytes actually change)`;
+			}
+			return { block: true, reason };
 		}
+		consecutiveGateBlocks = 0; // crossing passed; stale feedback flags no longer apply
+		lastMemUpdateNoOp = false;
 		crossedSinceLastHandoff = true;
 	});
 
