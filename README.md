@@ -11,17 +11,18 @@ The rules are simple.  The agent has a thinking directory, and a memory.md file.
 
 Before any external reaching tool call the agent must modify memory.md .  
 After K (default 1) tool calls the context is replaced, and the agent must operate from its notes.  
+In other words, the agent must write its own context.  
 
-This does carry a penalty because the agent has to document itself as it works.  The benefit is that the agent continues work with roughly rhe same context consumed at the beginning of each turn.  
+This does carry a penalty because the agent has to document itself as it works.  The benefit is that the agent continues work with roughly rhe same context consumed at the beginning of each turn.  (for example, a simple fastapi app took 54s with this extension and 47s without it.)
 
-This works much better with models that are better at instruction following.  Models with poor instruction skills tend to try to write straight away, and get blocked much more often.  
+This works much better with models that are better at instruction following.  Models with poor instruction skills tend to try to write straight away, and get blocked nearly every turn.  They try to write->blocked, update memory.md , and finally write->ok.  It wastes a lot of time.  
 
 
 ## Files
 
 - `.pi/extensions/memento/index.ts` — the whole implementation (~170 lines), loaded by project discovery
 - `goal.md` — your task objective at the project root, gitignored. `.pi/goal.md` also works (legacy location); if both exist, the root one wins. Injected into every request; writes to it are blocked by tools
-- `thinking/master.md` — the agent's belief state (gitignored). Fixed sections: Plan / Facts & Decisions / Pointers / Open Questions / Next Steps. Both `thinking/` and this file are created automatically when the loop arms
+- `thinking/memory.md` — the agent's belief state (gitignored). Fixed sections: Plan / Facts & Decisions / Pointers / Open Questions / Next Steps. Both `thinking/` and this file are created automatically when the loop arms
 
 ## Run a task
 
