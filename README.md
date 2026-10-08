@@ -25,27 +25,7 @@ A model with stronger instruction following and reasoning realizes the nature of
 
 ## The loop
 
-```mermaid
-flowchart TD
-    subgraph e1["Episode 1"]
-        A1["Context: goal.md + memory.md"] --> B1["I need to read file A before writing X"]
-        B1 --> C1["writes notes in memory.md"]
-        C1 --> D1["calls read(A)"]
-    end
-
-    subgraph e2["Episode 2"]
-        A2["Context: goal + memory.md<br/>+ result of read(A)"] --> B2["ok, now I can write(X)"]
-        B2 --> C2["writes intent in memory.md"]
-        C2 --> D2["calls write(X)"]
-    end
-
-    subgraph e3["Episode 3 ..."]
-        A3["Context: goal + memory.md<br/>+ result of write(X)"] --> B3["ok, next step ..."]
-    end
-
-    D1 -. "handoff — context replaced" .-> A2
-    D2 -. "handoff — context replaced" .-> A3
-```
+![The Memento Loop](.asset/process.webp)
 
 Net effect: context stays roughly the same size at every handoff; continuity lives in `memory.md`, not the conversation.
 
