@@ -3,6 +3,7 @@
 This is an attempt to solve the problem of shrinking context windows and long term tasks.  
 Basically, this forces the agent to first write notes, and then replaces the context after every tool call.  
 Instead of the agent seeing all previous information, the agent is presented with: 
+
 * the goal as defined in goal.md 
 * A protocol statement explaining the rules 
 * It's own ___memory.md___ file
@@ -20,6 +21,35 @@ This works much better with models that are better at instruction following.  Mo
 
 A model with stronger instruction following realizes the nature of the loop it's in, and starts to act and plan accordingly. 
 
+## The loop
+
+```mermaid
+flowchart TD
+    subgraph e1["Episode 1"]
+        A1["Context: goal.md + memory.md"] --> B1["I need to read file A before writing X"]
+        B1 --> C1["writes notes in memory.md"]
+        C1 --> D1["calls read(A)"]
+    end
+
+    subgraph e2["Episode 2"]
+        A2["Context: goal + memory.md<br/>+ result of read(A)"] --> B2["ok, now I can write(X)"]
+        B2 --> C2["writes intent in memory.md"]
+        C2 --> D2["calls write(X)"]
+    end
+
+    subgraph e3["Episode 3 ..."]
+        A3["Context: goal + memory.md<br/>+ result of write(X)"] --> B3["ok, next step ..."]
+    end
+
+    D1 -. "handoff — context replaced" .-> A2
+    D2 -. "handoff — context replaced" .-> A3
+```
+
+Net effect: context stays roughly the same size at every handoff; continuity lives in `memory.md`, not the conversation.
+
+
+
+In pi, this looks like a compaction after every tool call, but the compaction doesn't take time, it is simply rebuilding the context from goal.md and memory.md .  
 
 ## Files
 
@@ -35,11 +65,11 @@ A model with stronger instruction following realizes the nature of the loop it's
 
 ## Config (env)
 
-| Var | Default | Meaning |
-|---|---|---|
-| `MEMENTO_DIR` | `thinking` | thinking dir, relative to project root |
-| `MEMENTO_K` | `1` | transitions kept verbatim per handoff (an assistant message carrying tool calls + its results) |
-| `MEMENTO_GOAL` | `<root>/goal.md`, fallback `.pi/goal.md` | goal file path (env override wins over both) |
+| Var            | Default                                  | Meaning                                                                                        |
+| -------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `MEMENTO_DIR`  | `thinking`                               | thinking dir, relative to project root                                                         |
+| `MEMENTO_K`    | `1`                                      | transitions kept verbatim per handoff (an assistant message carrying tool calls + its results) |
+| `MEMENTO_GOAL` | `<root>/goal.md`, fallback `.pi/goal.md` | goal file path (env override wins over both)                                                   |
 
 ## Invariants enforced by the extension
 
@@ -48,13 +78,11 @@ A model with stronger instruction following realizes the nature of the loop it's
 - Crossing detection is default-crossing: anything not provably inside `thinking/` counts (external paths, path-less greps/finds, all bash, web tools). Purely internal turns never hand off.
 - Cuts land on assistant messages carrying tool calls, so an action/result pair is never split; if fewer than K transitions exist yet, everything from the first transition is kept.
 
-## Observability / eval hooks (design.md §7)
+## 
 
-- Session JSONL: every `compaction` entry embeds goal + master snapshot — belief-state history for free.
-- stderr `[memento] WARNING: handoff with master.md unchanged...` = stale-handoff metric (external ops without distilled state).
-- Context after any handoff is inspectable by expanding the TUI marker or reading the compaction entry + `firstKeptEntryId` from the session file.
 
-## Using it in another project
+
+## ## Using it in another project
 
 Copy `.pi/extensions/memento/` into that project's `.pi/extensions/` (the project must be trusted — see `~/.pi/agent/trust.json`) and give it a `goal.md` at the root (or legacy `.pi/goal.md`). Everything else is resolved relative to the project root, so each project gets its own goal + thinking dir.
 
