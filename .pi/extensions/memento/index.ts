@@ -158,7 +158,7 @@ What you wake up with after a handoff — exactly:
 
 Anything not written to disk does not exist for future-you after a handoff: in-flight reasoning, intermediate observations, "what I was about to do". This is mechanical and cannot be overridden — it is the enforcement of your memory discipline, not a suggestion.
 
-Consequence (the one rule that matters, mechanically enforced): ANY external call of a step — including a plain read — is BLOCKED while ${path.relative(ROOT, MEMORY_FILE)} has not changed on disk since the last handoff. So at the start of every episode between handoffs, update it first in whatever form serves you best; if nothing durable changed, still make some edit (e.g., refresh your current intent) before acting. Conclusions only — live scratch and in-flight working state belong in ${path.relative(ROOT, THINKING_DIR)}/ files instead.
+Consequence (the one rule that matters, mechanically enforced): ANY external call of a step — including a plain read — is BLOCKED while ${path.relative(ROOT, MEMORY_FILE)} has not changed on disk since the last handoff. So at the start of every episode between handoffs, update it first in whatever form serves you best; if nothing durable changed, still make some edit (e.g., refresh your current intent) before acting.
 
 memory.md has no required structure: organize and update it however is most useful to future-you after a handoff — sections, freeform prose, anything — and reorganize freely as the task evolves. The only hard requirement on it (mechanically enforced): it must change on disk before every crossing episode. If content is irreproducible and must survive a handoff, copy it into ${path.relative(ROOT, THINKING_DIR)}/ with write BEFORE the external call that makes you need to cross.
 
@@ -253,7 +253,7 @@ export default function (pi: ExtensionAPI) {
 		if (h === baselineMemoryHash) {
 			return {
 				block: true,
-				reason: `${MEMORY_FILE} is unchanged since the last handoff — update it first, then retry this call. Conclusions only; scratch goes in ${path.relative(ROOT, THINKING_DIR)}/ files.`,
+				reason: `${MEMORY_FILE} is unchanged since the last handoff — update it first, then retry this call.`,
 			};
 		}
 		crossedSinceLastHandoff = true;
