@@ -1,4 +1,4 @@
-# loopy — Master-Document Agent Loop
+# memento — Master-Document Agent Loop
 
 This is an attempt to solve the problem of shrinking context windows and long term tasks.  
 Basically, this forces the agent to first write notes, and then replaces the context after every tool call.  
@@ -25,8 +25,8 @@ This works much better with models that are better at instruction following.  Mo
 
 ## Run a task
 
-1. Write the objective into `goal.md` at the project root (or legacy `.pi/goal.md`) — keep it short, it's re-sent every step.
-2. `cd loopy && pi`, then prompt something like: "Begin working toward the stated GOAL."
+1. Write the objective into `goal.md` at the project root (or legacy `.pi/goal.md`) — this is part of every request.  
+2. Use the slash command '/memento on' then prompt something like: "Begin working toward the stated GOAL."
 3. Watch for `[compaction]` markers in the TUI after external steps — each is a handoff; expand one to see exactly what future-self woke up with (goal + master.md).
 
 ## Config (env)
@@ -34,7 +34,7 @@ This works much better with models that are better at instruction following.  Mo
 | Var | Default | Meaning |
 |---|---|---|
 | `MEMENTO_DIR` | `thinking` | thinking dir, relative to project root |
-| `MEMENTO_K` | `5` | transitions kept verbatim per handoff (an assistant message carrying tool calls + its results) |
+| `MEMENTO_K` | `1` | transitions kept verbatim per handoff (an assistant message carrying tool calls + its results) |
 | `MEMENTO_GOAL` | `<root>/goal.md`, fallback `.pi/goal.md` | goal file path (env override wins over both) |
 
 ## Invariants enforced by the extension
