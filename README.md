@@ -7,7 +7,7 @@ Instead of the agent seeing all previous information, the agent is presented wit
 * A protocol statement explaining the rules 
 * the result of the last tool call (or calls, adjustable).  
 
-The rules are simple.  The agent has a thniking directory, and a memory.md file.  The agent is free to read, and edit as required inside this thinknig directory.  
+The rules are simple.  The agent has a thinking directory, and a memory.md file.  The agent is free to read, and edit as required inside this thinknig directory.  
 
 Before any external reaching tool call the agent must modify memory.md .  
 After K (default 1) tool calls the context is replaced, and the agent must operate from its notes.  
