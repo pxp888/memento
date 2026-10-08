@@ -18,6 +18,8 @@ This does carry a penalty because the agent has to document itself as it works. 
 
 This works much better with models that are better at instruction following.  Models with poor instruction skills tend to try to write straight away, and get blocked nearly every turn.  They try to write->blocked, update memory.md , and finally write->ok.  It wastes a lot of time.  
 
+A model with stronger instruction following realizes the nature of the loop it's in, and starts to act and plan accordingly. 
+
 
 ## Files
 
