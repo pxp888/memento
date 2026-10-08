@@ -5,6 +5,7 @@ Basically, this forces the agent to first write notes, and then replaces the con
 Instead of the agent seeing all previous information, the agent is presented with: 
 * the goal as defined in goal.md 
 * A protocol statement explaining the rules 
+* It's own ___memory.md___ file
 * the result of the last tool call (or calls, adjustable).  
 
 The rules are simple.  The agent has a thinking directory, and a memory.md file.  The agent is free to read, and edit as required inside this thinknig directory.  
