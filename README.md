@@ -27,7 +27,7 @@ A model with stronger instruction following and reasoning realizes the nature of
 
 A good model can operate quite closely to the original model, but there is still a performance cost in terms of time.  On a trivial test ('generate a fastapi whiteboard app') the memento version of qwen3.8-27b took 55s and the original took 47s.  The original used 14 tool calls, and the memento version took 15.  
 
-On short tasks the token usage was much higher for the memento version, but on a long horizon task the memento version has an advantage as context doesn't grow with each step at the same rate.  
+On short tasks the token usage was much higher for the memento version (there is a penalty while the model figures out it's in a loop, and that it has to write current state down), but on a long horizon task the memento version has an advantage as context doesn't grow with each step at the same rate.  
 
 
 
@@ -57,7 +57,7 @@ A model fine-tuned to work with the constraints imposed here could be very inter
 
 1. Write the objective into `goal.md` at the project root (or legacy `.pi/goal.md`) — this is part of every request.  
 2. Use the slash command '/memento on' then prompt something like: "Begin working toward the stated GOAL." _(the first prompt doesn't really matter, the agent will forget it until it figures out that it is in a loop.)_
-3. Watch for `[compaction]` markers in the TUI after external steps — each is a handoff; expand one to see exactly what future-self woke up with (goal + memory.md).
+3. Watch for `[compaction]` markers in the TUI after external steps — each is a handoff. 
 
 ## Config (env)
 
