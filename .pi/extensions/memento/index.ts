@@ -186,6 +186,8 @@ function cutPointForK(entries: RawEntry[]): string | null {
 
 const PROTOCOL = `## MEMORY-DOCUMENT LOOP — how your world works
 
+You are operating in a loop.
+
 Your context does not accumulate across external actions. After ANY tool call that touches a path outside ${path.relative(ROOT, THINKING_DIR)}/ (file reads/writes/edits there, greps or finds without an explicit thinking scope, every bash command, web tools), the session is handed off mechanically before your next model request: everything older than the last ${K} action/result pairs is removed from context.
 
 What you wake up with after a handoff — exactly:
@@ -204,7 +206,6 @@ Ground truth is on disk: every message, tool call, and result ever sent is retai
 
 A handoff is only triggered by a tool call.  If you want user intervention, just stop.  If you want to proceed, you need to make a tool call.  
 
-You can delegate work to sub-agents as needed.  (They are not subject to the handoff rules here.)  
 
 ## Empirical gate behavior (important)
 - Each assistant tool batch = one "turn". At every turn_end where ≥1 crossing landed, \`crossedSinceLastHandoff\` is consumed AND **baselineMemoryHash resets to memory.md's current hash** — even mid-exchange. So after any turn containing external calls, the next external call (reads too) is blocked until memory.md changes on disk again. 

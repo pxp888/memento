@@ -42,7 +42,7 @@ In pi, this looks like a compaction after every tool call, but the compaction do
 ## Run a task
 
 1. Write the objective into `goal.md` at the project root (or legacy `.pi/goal.md`) — this is part of every request.  
-2. Use the slash command '/memento on' then prompt something like: "Begin working toward the stated GOAL."
+2. Use the slash command '/memento on' then prompt something like: "Begin working toward the stated GOAL." _(the first prompt doesn't really matter, the agent will forget it until it figures out that it is in a loop.)_
 3. Watch for `[compaction]` markers in the TUI after external steps — each is a handoff; expand one to see exactly what future-self woke up with (goal + master.md).
 
 ## Config (env)
