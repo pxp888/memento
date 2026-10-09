@@ -23,6 +23,14 @@ It also helps greatly to have a model that understands it will be operating in a
 
 A model with stronger instruction following and reasoning realizes the nature of the loop it's in, and starts to act and plan accordingly. 
 
+## downsides
+
+A good model can operate quite closely to the original model, but there is still a performance cost in terms of time.  On a trivial test ('generate a fastapi whiteboard app') the memento version of qwen3.8-27b took 55s and the original took 47s.  The original used 14 tool calls, and the memento version took 15.  
+
+On short tasks the token usage was much higher for the memento version, but on a long horizon task the memento version has an advantage as context doesn't grow with each step at the same rate.  
+
+
+
 ## The loop
 
 ![The Memento Loop](.asset/process.jpeg)
@@ -32,6 +40,11 @@ Net effect: context stays roughly the same size at every handoff; continuity liv
 
 
 In pi, this looks like a compaction after every tool call, but the compaction doesn't take time, it is simply rebuilding the context from goal.md and memory.md .  
+
+## next steps 
+
+A model fine-tuned to work with the constraints imposed here could be very interesting.  If it could learn to carry through the reasoning and logic of its ungated "normal" counterpart, you would have a model with equivalent reasoning but very differently shaped context window limitations.  
+
 
 ## Files
 
