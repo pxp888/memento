@@ -25,7 +25,7 @@ A model with stronger instruction following and reasoning realizes the nature of
 
 ## The loop
 
-![The Memento Loop](.asset/process.webp)
+![The Memento Loop](.asset/process.jpeg)
 
 Net effect: context stays roughly the same size at every handoff; continuity lives in `memory.md`, not the conversation.
 
