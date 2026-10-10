@@ -20,7 +20,7 @@
  *
  * Env config:
  *   MEMENTO_DIR   thinking dir, relative to project root  (default "thinking")
- *   MEMENTO_K     transitions kept verbatim per handoff    (default 1)
+ *   MEMENTO_K     transitions kept verbatim per handoff    (default 3)
  *   MEMENTO_GOAL  goal file path                           (default <root>/goal.md, fallback .pi/goal.md)
  */
 
@@ -32,7 +32,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const ROOT = process.cwd();
 const THINKING_DIR = path.resolve(ROOT, process.env.MEMENTO_DIR ?? "thinking");
-const K = Math.max(1, Number(process.env.MEMENTO_K ?? 1));
+const K = Math.max(1, Number(process.env.MEMENTO_K ?? 3));
 // Goal resolution order: env override, then root goal.md, then .pi/goal.md (legacy).
 const GOAL_CANDIDATES = [path.join(ROOT, "goal.md"), path.join(ROOT, ".pi", "goal.md")];
 const GOAL_FILE = process.env.MEMENTO_GOAL
@@ -199,6 +199,8 @@ Consequence (the one rule that matters, mechanically enforced): ANY external cal
 
 memory.md has no required structure: organize and update it however is most useful to future-you after a handoff — sections, freeform prose, anything — and reorganize freely as the task evolves. The only hard requirement on it (mechanically enforced): it must change on disk before every crossing episode. If content is irreproducible and must survive a handoff, copy it into ${path.relative(ROOT, THINKING_DIR)}/ with write BEFORE the external call that makes you need to cross.
 
+memory.md exists for your benefit, you should be verbose enough about your intentions so you don't repeat actions that didn't work.  
+
 The rest of ${path.relative(ROOT, THINKING_DIR)}/ is yours for working state — notes, partial drafts, intermediate lists. Writes there are free: they never trigger a handoff. But they do not ride into post-handoff context unless you re-read them — use them within the current episode; leave some trace in memory.md (in whatever form fits) if future-you should look back.
 
 Ground truth is on disk: every message, tool call, and result ever sent is retained verbatim in the pi session file (newest .jsonl under a project-named subdir of ${SESSIONS_DIR}). Before re-running an expensive operation whose output may already exist there, grep it instead:
@@ -306,6 +308,9 @@ export default function (pi: ExtensionAPI) {
 			} else if (consecutiveGateBlocks >= 2) {
 				reason += ` (gate block #${consecutiveGateBlocks} in a row — retrying this call will not help until memory.md's bytes actually change)`;
 			}
+			// The blocked model usually still holds its plan only in context: point it
+			// at distilling that plan rather than just "update the file".
+			reason += ` You had an active plan in your thoughts. Distill that plan into ${MEMORY_FILE} before proceeding.`;
 			return { block: true, reason };
 		}
 		consecutiveGateBlocks = 0; // crossing passed; stale feedback flags no longer apply
