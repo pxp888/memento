@@ -45,6 +45,9 @@ In pi, this looks like a compaction after every tool call, but the compaction do
 
 A model fine-tuned to work with the constraints imposed here could be very interesting.  If it could learn to carry through the reasoning and logic of its ungated "normal" counterpart, you would have a model with equivalent reasoning but very differently shaped context window limitations.  
 
+This implementation as a pi extension causes significant token burn, as the KV cache is rebuilt on every request.  If this was implemented in a modified engine, this could be avoided and the token use would be comparable to normal operation.  
+
+
 
 ## Files
 
