@@ -201,6 +201,8 @@ memory.md has no required structure: organize and update it however is most usef
 
 memory.md exists for your benefit, you should be verbose enough about your intentions so you don't repeat actions that didn't work.  
 
+Don't forget to record details of failures as well as successes.  
+
 The rest of ${path.relative(ROOT, THINKING_DIR)}/ is yours for working state — notes, partial drafts, intermediate lists. Writes there are free: they never trigger a handoff. But they do not ride into post-handoff context unless you re-read them — use them within the current episode; leave some trace in memory.md (in whatever form fits) if future-you should look back.
 
 Ground truth is on disk: every message, tool call, and result ever sent is retained verbatim in the pi session file (newest .jsonl under a project-named subdir of ${SESSIONS_DIR}). Before re-running an expensive operation whose output may already exist there, grep it instead:
