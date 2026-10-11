@@ -27,34 +27,62 @@ A model with stronger instruction following and reasoning realizes the nature of
 
 A good model can operate quite closely to the original model, but there is still a performance cost in terms of time.  On a trivial test ('generate a fastapi whiteboard app') the memento version of qwen3.8-27b took 55s and the original took 47s.  The original used 14 tool calls, and the memento version took 15.  
 
-On short tasks the token usage was much higher for the memento version (there is a penalty while the model figures out it's in a loop, and that it has to write current state down), but on a long horizon task the memento version has an advantage as context doesn't grow with each step at the same rate.  
-
 
 
 ## The loop
 
-![The Memento Loop](.asset/process.jpeg)
+![The Memento Loop](/home/pxperrine/Documents/code/memento/.asset/process.jpeg)
 
 Net effect: context stays roughly the same size at every handoff; continuity lives in `memory.md`, not the conversation.
 
+In pi, this looks like a compaction after every tool call, but the compaction doesn't take time, it is simply rebuilding the context from goal.md and memory.md .
 
 
-In pi, this looks like a compaction after every tool call, but the compaction doesn't take time, it is simply rebuilding the context from goal.md and memory.md .  
 
-## next steps 
+## example test
+
+_This includes results from [gardener](https://github.com/pxp888/gardener), another context summarization method._
+
+
+
+Task (`goal.md`):
+
+> develop a fastapi todo list app that is publicly available and editable.
+> Users should be able to create and destroy lists.
+> This should be able to display multiple lists, and items should be draggable between lists.
+> this should run in its own venv, and be served on port 8000.
+
+Model: `thinkfarm/qwen3.8:27b-ud-q4_k_m` — 10/11/2026.
+
+|                                    | memento              | gardener          | normal     |
+| ---------------------------------- | --------------------:| -----------------:| ----------:|
+| Assistant turns                    | 13                   | 10                | 16         |
+| Tool results / calls               | 15 / 15              | 10 / 10           | 17 / 17    |
+| Compactions                        | 5 (≈1 per 2.6 turns) | 2 (1 per 5 turns) | 0          |
+| ↑ input tokens                     | 27k                  | 33k               | 10k        |
+| ↓ output tokens                    | 14k                  | 17k               | 18k        |
+| R cache-read tokens                | 157k                 | 137k              | 309k       |
+| **Total tokens (↑+↓+R)**           | **≈198k**            | **≈187k**         | **≈337k**  |
+| Avg context per turn ((↑+R)/turns) | ≈14.2k               | 17.0k             | ≈19.9k     |
+| **Est. cost**                      | **$0.065**           | **$0.076**        | **$0.078** |
+
+*Cost = ↑×$0.45/M + ↓×$3.20/M + R×$0.05/M (assumed prices).*
+
+On this task both gated variants beat normal on total tokens, and per-turn context stays flat instead of growing with each step.  
+
+
+
+## next steps
 
 A model fine-tuned to work with the constraints imposed here could be very interesting.  If it could learn to carry through the reasoning and logic of its ungated "normal" counterpart, you would have a model with equivalent reasoning but very differently shaped context window limitations.  
 
 This implementation as a pi extension causes significant token burn, as the KV cache is rebuilt on every request.  If this was implemented in a modified engine, this could be avoided and the token use would be comparable to normal operation.  
-
-
 
 ## Files
 
 - `.pi/extensions/memento/index.ts` — the whole implementation (~170 lines), loaded by project discovery
 - `goal.md` — your task objective at the project root, gitignored. `.pi/goal.md` also works (legacy location); if both exist, the root one wins. Injected into every request; writes to it are blocked by tools
 - `thinking/memory.md` — the agent's belief state (gitignored). Fixed sections: Plan / Facts & Decisions / Pointers / Open Questions / Next Steps. Both `thinking/` and this file are created automatically when the loop arms. 
-
 
 ## Run a task
 
@@ -76,14 +104,8 @@ This implementation as a pi extension causes significant token burn, as the KV c
 - Crossing detection is default-crossing: anything not provably inside `thinking/` counts (external paths, path-less greps/finds, all bash, web tools). Purely internal turns never hand off.
 - memory.md must change before any external tool call.  
 
-
 ## Using it in another project
 
 Copy `.pi/extensions/memento/` into that project's `.pi/extensions/` (the project must be trusted — see `~/.pi/agent/trust.json`) and give it a `goal.md` at the root (or legacy `.pi/goal.md`). Everything else is resolved relative to the project root, so each project gets its own goal + thinking dir.
 
 Or install once globally at `~/.pi/agent/extensions/memento/index.ts` (user-level extensions skip project trust). The extension is **opt-in per project**: if neither `goal.md` nor `.pi/goal.md` exists in the working directory it registers nothing, touches nothing on disk, and logs `[memento] inactive`. Create a goal file, restart pi or `/reload`, and that project arms — which also creates its `thinking/` dir and seeds `memory.md` if missing.
-
-
-
-
-
