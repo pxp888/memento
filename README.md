@@ -27,7 +27,7 @@ In any case, this is a challenging situation to put a model, and one that they a
 
 ## The loop
 
-![The Memento Loop](/home/pxperrine/Documents/code/memento/.asset/process.jpeg)
+![The Memento Loop](.asset/process.jpeg)
 
 Net effect: context stays roughly the same size at every handoff; continuity lives in `memory.md`, not the conversation.
 
