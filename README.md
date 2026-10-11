@@ -17,17 +17,13 @@ In other words, __the agent must write its own context.__
 
 This does carry a penalty because the agent has to document itself as it works.  The benefit is that the agent continues work with roughly the same context consumed at the beginning of each turn.  (for example, a simple fastapi app took 54s with this extension and 47s without it.)
 
-This works much better with models that are better at instruction following.  Models with poor instruction skills tend to try to write straight away, and get blocked nearly every turn.  They try to write->blocked, update memory.md , and finally write->ok.  It wastes a lot of time.  _nemotron 3.5 for example, tried to make writes before updating memory.md 59% of the time. Qwen3.8:27b figured out the mechanic, and wrote itself a note on how to deal with it._
+This approach seems to be very sensitive to the specific model used.  It is a reasoning challenge to understand that you are operating in a loop, and smaller models can get lost trying to grasp the circular logic.  Some models with poor instruction following tend to try and make tool calls before saving their intent in memory.md like they've been told.  Nemotron 3.5 lightning 'hits the gate' on 60% of all tool calls.  
 
-It also helps greatly to have a model that understands it will be operating in a loop.  This alone is a reasoning challenge that models are not naturally prepared for.  Most models _want_ to solve problems in one-shot, but loop behavior can be established if you ask the model to do it.  
+Qwen3.8:27b seems to work very well with this loop.  It tends to write itself a note, and get on with and almost never forgets the process.  
 
-A model with stronger instruction following and reasoning realizes the nature of the loop it's in, and starts to act and plan accordingly. 
+I tried Gemini 3.8 flash, which is a very strong reasoning model, but even that tends to forget to write intent and gets stuck in a loop trying to do the same thing multiple times.  _I think it is trained to simply rely on its massive 1M token context, and the idea of note taking is not part of its process._ 
 
-## downsides
-
-A good model can operate quite closely to the original model, but there is still a performance cost in terms of time.  On a trivial test ('generate a fastapi whiteboard app') the memento version of qwen3.8-27b took 55s and the original took 47s.  The original used 14 tool calls, and the memento version took 15.  
-
-
+In any case, this is a challenging situation to put a model, and one that they are not inherently trained for.  There are plenty of models yet to try, but so far qwen3.8:27b has been the only reliable candidate.  
 
 ## The loop
 
@@ -37,40 +33,7 @@ Net effect: context stays roughly the same size at every handoff; continuity liv
 
 In pi, this looks like a compaction after every tool call, but the compaction doesn't take time, it is simply rebuilding the context from goal.md and memory.md .
 
-
-
-## example test
-
-_This includes results from [gardener](https://github.com/pxp888/gardener), another context summarization method._
-
-
-
-Task (`goal.md`):
-
-> develop a fastapi todo list app that is publicly available and editable.
-> Users should be able to create and destroy lists.
-> This should be able to display multiple lists, and items should be draggable between lists.
-> this should run in its own venv, and be served on port 8000.
-
-Model: `thinkfarm/qwen3.8:27b-ud-q4_k_m` — 10/11/2026.
-
-|                                    | memento              | gardener          | normal     |
-| ---------------------------------- | --------------------:| -----------------:| ----------:|
-| Assistant turns                    | 13                   | 10                | 16         |
-| Tool results / calls               | 15 / 15              | 10 / 10           | 17 / 17    |
-| Compactions                        | 5 (≈1 per 2.6 turns) | 2 (1 per 5 turns) | 0          |
-| ↑ input tokens                     | 27k                  | 33k               | 10k        |
-| ↓ output tokens                    | 14k                  | 17k               | 18k        |
-| R cache-read tokens                | 157k                 | 137k              | 309k       |
-| **Total tokens (↑+↓+R)**           | **≈198k**            | **≈187k**         | **≈337k**  |
-| Avg context per turn ((↑+R)/turns) | ≈14.2k               | 17.0k             | ≈19.9k     |
-| **Est. cost**                      | **$0.065**           | **$0.076**        | **$0.078** |
-
-*Cost = ↑×$0.45/M + ↓×$3.20/M + R×$0.05/M (assumed prices).*
-
-On this task both gated variants beat normal on total tokens, and per-turn context stays flat instead of growing with each step.  
-
-
+[Initial testing results](./testing.md) from a couple of basic tests.  
 
 ## next steps
 
