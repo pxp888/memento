@@ -15,7 +15,11 @@ Before any external reaching tool call the agent must modify memory.md .
 After K (default 1) tool calls the context is replaced, and the agent must operate from its notes.  
 In other words, __the agent must write its own context.__  
 
-This does carry a penalty because the agent has to document itself as it works.  The benefit is that the agent continues work with roughly the same context consumed at the beginning of each turn.  (for example, a simple fastapi app took 54s with this extension and 47s without it.)
+This does carry a penalty because the agent has to document itself as it works.  The benefit is that the agent continues work with roughly the same context consumed at the beginning of each turn.  (for example, a simple fastapi app took 54s with this extension and 47s without it.)  
+
+**What is it for?**  The intended use case is long, continuous jobs.  For example, I asked this to run the entire human-eval test suite in one session, and it successfully did.  All 164 problems were solved in one go without an external loop.  
+
+## Model choice 
 
 This approach seems to be very sensitive to the specific model used.  It is a reasoning challenge to understand that you are operating in a loop, and smaller models can get lost trying to grasp the circular logic.  Some models with poor instruction following tend to try and make tool calls before saving their intent in memory.md like they've been told.  Nemotron 3.5 lightning 'hits the gate' on 60% of all tool calls.  
 
@@ -23,7 +27,7 @@ Qwen3.8:27b seems to work very well with this loop.  It tends to write itself a 
 
 I tried Gemini 3.8 flash, which is a very strong reasoning model, but even that tends to forget to write intent and gets stuck in a loop trying to do the same thing multiple times.  _I think it is trained to simply rely on its massive 1M token context, and the idea of note taking is not part of its process._ 
 
-In any case, this is a challenging situation to put a model, and one that they are not inherently trained for.  There are plenty of models yet to try, but so far qwen3.8:27b has been the only reliable candidate.  
+In any case, this is a challenging situation to put a model, and one that they are not inherently trained for.  There are plenty of models yet to try, but so far qwen3.8:27b has been the most successful candidate.  
 
 ## The loop
 
