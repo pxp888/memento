@@ -1,8 +1,8 @@
 # Initial Testing results
 
-This was done with a third variant, inception (tested 10/20/2026), which is also a context management attempt.  
+This was done with a third variant, [inception](https://github.com/pxp888/inception), which is also a context management extension. 
 
-All tests were done with Qwen3.8:27b, which is the best model I've found for use with memento (inception ran on autobot/auto).   
+All tests were done with Qwen3.8:27b, which is the best model I've found for use with memento.  
 
 
 
@@ -32,7 +32,7 @@ Memento and normal both completed this in one shot with no bugs; inception has n
 | Avg context per turn ((↑+R)/turns) | ≈14.2k               | —                 | ≈19.9k     |
 | **Est. cost**                      | **$0.065**           | —                 | **$0.078** |
 
-*Cost = ↑×$0.45/M + ↓×$3.20/M + R×$0.05/M (assumed Qwen3.8:27b prices). Inception ran on autobot/auto; the same formula is applied for comparability, though its reported session cost was $0.00.*
+*Cost = ↑×$0.45/M + ↓×$3.20/M + R×$0.05/M (assumed Qwen3.8:27b prices). 
 
 ## Second Test
 
