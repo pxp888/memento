@@ -1,5 +1,7 @@
 # memento — Master-Document Agent Loop
 
+## **This is an ongoing experiment, do not use it seriously.**
+
 This is an attempt to solve the problem of shrinking context windows and long term tasks.  
 Basically, this forces the agent to first write notes, and then replaces the context after every tool call.  
 Instead of the agent seeing all previous information, the agent is presented with: 
